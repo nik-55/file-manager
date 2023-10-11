@@ -10,6 +10,7 @@
 <body>
     <input id="file-1" type="file">
     <button onclick="submit()">Submit</button>
+    <button onclick="getfile()">get file</button>
     <script>
         async function submit() {
             const file = document.getElementById('file-1').files[0];
@@ -23,6 +24,20 @@
             document.getElementsByTagName("body")[0].append(video);
             console.log(bloburl);
         }
+
+        async function getfile() {
+            const res = await fetch('/file');
+            const binarydata = await res.arrayBuffer();
+            console.log(binarydata);
+            const blob = new Blob([binarydata], { type: "text/*" });
+            const bloburl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = bloburl;
+            a.download = "downlad.txt"
+            a.textContent = "poop"
+            document.getElementsByTagName("body")[0].append(a);
+        }
+
     </script>
 </body>
 
