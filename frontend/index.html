@@ -11,6 +11,7 @@
     <input id="file-1" type="file">
     <button onclick="submit()">Submit</button>
     <button onclick="getfile()">get file</button>
+    <button onclick="upload()">Upload file</button>
     <script>
         async function submit() {
             const file = document.getElementById('file-1').files[0];
@@ -36,6 +37,24 @@
             a.download = "downlad.txt"
             a.textContent = "poop"
             document.getElementsByTagName("body")[0].append(a);
+        }
+
+        async function upload() {
+            const file = document.getElementById('file-1').files[0];
+            const filereader = new FileReader();
+            filereader.onload = async (event)=>{
+                const binarydata = event.target.result;
+                const blob = new Blob([binarydata], { type: "video/mp4" });
+                const formdata = new FormData();
+                formdata.append("video", blob)
+                const res = await fetch("/video/upload", {
+                    method: "POST",
+                    body: formdata
+                })
+                console.log(res);
+            };
+            
+            filereader.readAsArrayBuffer(file);
         }
 
     </script>
