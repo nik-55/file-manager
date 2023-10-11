@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input id="file-1" type="file">
+    <button onclick="submit()">Submit</button>
+    <script>
+        async function submit() {
+            const file = document.getElementById('file-1').files[0];
+            const blob = new Blob([file], { type: "video/*" });
+            const bloburl = URL.createObjectURL(blob);
+            const video = document.createElement('video');
+            video.src = bloburl;
+            video.width = "200";
+            video.height = "300";
+            video.controls = true;
+            document.getElementsByTagName("body")[0].append(video);
+            console.log(bloburl);
+        }
+    </script>
+</body>
+
+</html>
