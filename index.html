@@ -19,7 +19,27 @@
         const fileDownload = document.getElementById("file-download");
 
         async function handleUpload() {
+            const file = fileInput.files[0];
+            const file_extension = file.name.split(".")[1];
 
+            let content_type;
+            if (['png', 'jpeg', 'jpg'].includes(file_extension)) {
+                content_type = `image/${file_extension}`;
+            }
+            else if (['mp4'].includes(file_extension)) {
+                content_type = `video/${file_extension}`;
+            }
+            else content_type = "application/octet-stream";
+
+            const response = await fetch("/upload", {
+                method: "POST",
+                headers: {
+                    "Content-Type": content_type
+                },
+                body: file
+            })
+
+            console.log(response);
         }
 
         async function fetchFile() {
@@ -27,7 +47,7 @@
             const content_type = response.headers.get('Content-Type');
             const stream = response.body.getReader();
 
-            const chunks = []; // your binary data
+            const chunks = []; // Binary data
 
             async function fetchChunk() {
                 const { done, value: chunk } = await stream.read();
@@ -35,7 +55,10 @@
                 if (done) {
                     console.log("Completed....");
 
+                    // Blob is a high level object to deal with binary data in js
                     const blob = new Blob(chunks, { type: content_type });
+
+                    // Points to temporary memory in the browser
                     const blob_url = URL.createObjectURL(blob);
 
                     fileDownload.href = blob_url;
@@ -45,7 +68,7 @@
                 else {
                     console.log("chunks", chunk);
                     chunks.push(chunk);
-                    fetchChunk();
+                    fetchChunk(); // recursive call as we are receiving the binary data in chunks
                 }
             }
 
