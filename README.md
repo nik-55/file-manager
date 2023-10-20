@@ -1780,3 +1780,23 @@ In summary, "Buffer" is a specific implementation in Node.js for handling binary
 
 
 ----
+
+
+```
+
+const response = await fetch(`/file/${fileName.value}`);
+
+const content_type = response.headers.get('Content-Type');
+const binaryData = await response.arrayBuffer();
+
+// Blob is a high level object to deal with binary data in js
+const blob = new Blob([binaryData], { type: content_type });
+
+// Temporary memory in the browser
+const blob_url = URL.createObjectURL(blob);
+
+fileDownload.href = blob_url;
+fileDownload.innerText = "Download is available";
+fileDownload.download = "d_file"
+
+```

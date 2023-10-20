@@ -1,63 +1,65 @@
-const express = require('express');
-const app = express();
-const fs = require('fs');
+const http = require("http");
+const fs = require("fs");
 
-require('dotenv').config()
+function requestHandler(req, res) {
+    if (req.method === "GET") {
+        if (req.url === "/") {
+            res.setHeader("Content-Type", "text/plain");
+            res.writeHead(200);
+            res.write("Hello this is a nodejs server");
+            res.end();
+        }
 
+        if (req.url === "/frontend") {
+            res.setHeader("Content-Type", "text/html");
+            res.writeHead(200);
+            const stream = fs.createReadStream(`${__dirname}/index.html`);
+            stream.pipe(res); // Piping the read stream to the response stream
+        }
 
-app.get('/', (req, res) => {
-    res.json('Hello World');
-});
+        if (req.url.startsWith("/file/")) {
+            const file_name = req.url.split("/file/")[1];
+            const file_extension = file_name.split('.')[1];
 
-app.get('/frontend', (req, res) => {
-    const readstream = fs.createReadStream("./frontend/index.html")
-    readstream.pipe(res);
-});
+            let content_type;
+            if (['png', 'jpeg', 'jpg'].includes(file_extension)) {
+                content_type = `image/${file_extension}`;
+            }
+            else if (['mp4'].includes(file_extension)) {
+                content_type = `video/${file_extension}`;
+            }
+            else content_type = "application/octet-stream";
 
+            const stream = fs.createReadStream(`${__dirname}/${file_name}`);
 
-app.get('/file', (req, res) => {
-    const readstream = fs.createReadStream('./README.md');
-    const writeStream = fs.createWriteStream('./output.txt')
-    let i = 0;
-    readstream.on('data', (chunk) => {
-        console.log('data is read', chunk);
-        // chunk is buffer or binary data
-        // console.log('data is read in other form', chunk.toString("base64"));
-        // data:text/html;base64,VGhpcyBpcyBzaW1wbGUgdHJhbnNmZXIgZmlsZQp0aGlzIGlzIGFuIGV4YW1wbGUgZmlsZQ==
-        if (i == 0) writeStream.write(chunk);
-        i++;
-    });
-    readstream.on("end", () => {
-        console.log("completed");
-    })
-    readstream.pipe(res);
-});
+            res.setHeader("Content-Type", content_type)
+            res.writeHead(200);
+            stream.pipe(res);
+        }
+    }
 
-app.post('/upload', (req, res) => {
-    const writeStream = fs.createWriteStream('./upload.txt')
-    // const writeStream = fs.createWriteStream('./upload.png')
-    let i = 0, chunkedimage;
-    req.on('data', (chunk) => {
-        console.log("Recieved chunk", chunk);
-        if (i == 0) { chunkedimage = chunk.toString("base64"); }
-        i++;
-    })
-    req.pipe(writeStream);
-    req.on("end", () => {
-        // res.send(`data:image/png;base64,${chunkedimage}`);
-    })
+    if (req.method === "POST") {
+        if (req.url === "/upload") {
+            const file_extension = req.headers['content-type'].split('/')[1];
+            const file_name = `file.${file_extension}`;
 
-    res.send("okk...")
+            const stream = fs.createWriteStream(`${__dirname}/${file_name}`);
+
+            req.pipe(stream); // Piping the request stream to file stream
+
+            // When file is saved successfully, it emits an event "finish" 
+            stream.on("finish", () => {
+                res.setHeader("Content-Type", "text/plain");
+                res.writeHead(201);
+                res.write("ok");
+                res.end();
+            });
+        }
+    }
+}
+
+const server = http.createServer(requestHandler);
+
+server.listen(8000, () => {
+    console.log("Server is running...");
 })
-
-app.post("/video/upload", (req, res) => {
-    const writeStream = fs.createWriteStream("./uploadedvideo.mp4");
-    req.on("data", (chunk) => {
-        writeStream.write(chunk)
-    })
-    res.send("done...")
-})
-
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-});

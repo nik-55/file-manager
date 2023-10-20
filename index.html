@@ -1,0 +1,55 @@
+<body>
+    <h1>Hello world</h1>
+    <div>
+        <label>File Uploader</label>
+        <input type="file" id="file-input">
+        <button onclick="handleUpload()">Upload</button>
+    </div>
+
+    <div>
+        <label>File Downloader</label>
+        <input type="text" id="file-name">
+        <button onclick="fetchFile()">Fetch File</button>
+        <a id="file-download" href="#">No download media yet</a>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById("file-input");
+        const fileName = document.getElementById("file-name");
+        const fileDownload = document.getElementById("file-download");
+
+        async function handleUpload() {
+
+        }
+
+        async function fetchFile() {
+            const response = await fetch(`/file/${fileName.value}`);
+            const content_type = response.headers.get('Content-Type');
+            const stream = response.body.getReader();
+
+            const chunks = []; // your binary data
+
+            async function fetchChunk() {
+                const { done, value: chunk } = await stream.read();
+
+                if (done) {
+                    console.log("Completed....");
+
+                    const blob = new Blob(chunks, { type: content_type });
+                    const blob_url = URL.createObjectURL(blob);
+
+                    fileDownload.href = blob_url;
+                    fileDownload.innerText = "Download is available";
+                    fileDownload.download = "d_file"
+                }
+                else {
+                    console.log("chunks", chunk);
+                    chunks.push(chunk);
+                    fetchChunk();
+                }
+            }
+
+            fetchChunk();
+        }
+    </script>
+</body>
